@@ -1,0 +1,108 @@
+create table tbl_calendar
+(
+    cal_title     varchar(50) not null comment '이벤트_제목',
+    cal_start_day date        not null comment '이벤트_시작일',
+    cal_end_day   date        not null comment '이벤트_종료',
+    cal_category  varchar(10) not null comment '이벤트_분류',
+    cal_index     int auto_increment comment '이벤트_인덱스'
+        primary key
+)
+    comment '캘린더 정보 테이블';
+
+create table tbl_dept
+(
+    d_dept   varchar(20) not null comment '부서_이름',
+    d_deptno int         not null comment '부서_번호'
+        primary key
+)
+    comment '부서 테이블';
+
+create table tbl_member
+(
+    m_num      int auto_increment comment '회원_번호(사번개념)'
+        primary key,
+    m_id       varchar(100)             not null comment '회원_아이디',
+    m_password varchar(100)             not null comment '회원_비밀번호',
+    m_name     varchar(20)              not null comment '회원_이름',
+    d_deptno   int                      null comment '회원_부서',
+    m_deldt    datetime                 null comment '회원_삭제일시',
+    m_regdt    datetime default (now()) null comment '회원_등록일시',
+    constraint tbl_member_tbl_dept_null_fk
+        foreign key (d_deptno) references tbl_dept (d_deptno)
+)
+    comment '회원 테이블';
+
+create table tbl_team
+(
+    t_index int auto_increment comment '팀_인덱스'
+        primary key,
+    t_wnum  int                                not null comment '팀_주차(week)정보',
+    t_dnum  int                                null comment '팀_요일정보(0~6)',
+    f_name  varchar(20)                        null comment '음식_이름',
+    t_ynum  int                                null comment '팀_연(year)정보',
+    t_regdt datetime default CURRENT_TIMESTAMP not null comment '팀_등록일시',
+    t_deldt datetime                           null comment '팀_삭제일시'
+)
+    comment '팀 테이블';
+
+create table tbl_day
+(
+    t_index  int                  not null comment '팀_인덱스',
+    m_num    int                  not null comment '회원_번호',
+    day_mon  tinyint(1) default 0 not null comment '요일_월',
+    day_tue  tinyint(1) default 0 not null comment '요일_화',
+    day_wed  tinyint(1) default 0 not null comment '요일_수',
+    day_thur tinyint(1) default 0 not null comment '요일_목',
+    day_fri  tinyint(1) default 0 not null comment '요일_금',
+    primary key (t_index, m_num),
+    constraint tbl_day_tbl_member_null_fk
+        foreign key (m_num) references tbl_member (m_num),
+    constraint tbl_day_tbl_team_null_fk
+        foreign key (t_index) references tbl_team (t_index)
+)
+    comment '요일투표 테이블';
+
+create table tbl_food
+(
+    m_num   int           not null comment '회원_번호',
+    t_index int           not null comment '팀_인덱스',
+    f_name  varchar(20)   not null comment '음식_이름',
+    f_like  int default 0 not null comment '음식_좋아요 수',
+    f_deldt datetime      null comment '음식_삭제일시',
+    f_regdt datetime      null comment '음식_등록일시',
+    primary key (m_num, t_index),
+    constraint tbl_food_tbl_member_null_fk
+        foreign key (m_num) references tbl_member (m_num),
+    constraint tbl_food_tbl_team_null_fk
+        foreign key (t_index) references tbl_team (t_index)
+)
+    comment '음식 테이블';
+
+create table tbl_foodlike
+(
+    t_index int         not null comment '팀_인덱스',
+    m_num   int         not null comment '회원_번호',
+    f_name  varchar(20) not null comment '음식_이름',
+    primary key (t_index, m_num),
+    constraint tbl_foodlike_tbl_food_m_num_fk
+        foreign key (m_num) references tbl_food (m_num),
+    constraint tbl_foodlike_tbl_food_t_index_fk
+        foreign key (t_index) references tbl_food (t_index)
+)
+    comment '음식_좋아요 정보 테이블';
+
+create table tbl_tmember
+(
+    t_index  int                                  not null comment '팀_인덱스',
+    m_num    int                                  not null comment '멤버_번호',
+    tm_like  tinyint(1) default 0                 null comment '팀구성원_좋아요 여부',
+    tm_deldt datetime                             null comment '팀구성원_삭제일시',
+    tm_regdt datetime   default CURRENT_TIMESTAMP not null comment '팀구성원_등록일시',
+    primary key (t_index, m_num),
+    constraint tbl_tmember_tbl_member_null_fk
+        foreign key (m_num) references tbl_member (m_num),
+    constraint tbl_tmember_tbl_team_null_fk
+        foreign key (t_index) references tbl_team (t_index)
+)
+    comment '팀구성원 테이블';
+
